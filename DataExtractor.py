@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import streamlit as st
 from io import BytesIO
 from difflib import get_close_matches
+import matplotlib.backends.backend_pdf
 
 st.set_page_config(page_title="Fund Data Extractor", layout="wide")
 st.title("📊 Fund Performance Data Extractor")
@@ -88,25 +89,44 @@ if all_data:
     combined_df = pd.concat(all_data, ignore_index=True)
     combined_df["net_return_usd"] = combined_df["return"] * combined_df["aum"]
 
+    # 1️⃣ Show combined preview
     st.subheader("🔹 Combined Data Preview")
     st.dataframe(combined_df.tail(10))
 
-    # Average Return by Fund
+    # 2️⃣ Plot 1 - Avg Return by Fund
     st.subheader("📈 Average Return by Fund")
     avg_returns = combined_df.groupby("fund_name")["return"].mean()
     st.bar_chart(avg_returns)
 
-    # AUM by Strategy
+    # 3️⃣ Plot 2 - AUM by Strategy
     st.subheader("📊 Total AUM by Strategy")
     aum_by_strategy = combined_df.dropna(subset=["aum"]).groupby("strategy")["aum"].sum()
     st.bar_chart(aum_by_strategy)
 
-    # Average Return by Strategy
+    # 4️⃣ Plot 3 - Avg Return by Strategy
     st.subheader("📈 Average Return by Strategy")
     avg_ret_by_strategy = combined_df.groupby("strategy")["return"].mean()
     st.bar_chart(avg_ret_by_strategy)
 
-    # Download options
+    # ✅ ⬇️ INSERT PDF EXPORT CODE HERE ⬇️
+    st.subheader("📄 Download Summary PDF Report")
+
+    pdf_buffer = BytesIO()
+    pdf = matplotlib.backends.backend_pdf.PdfPages(pdf_buffer)
+
+    # (all the PDF chart/summary code from previous message goes here...)
+
+    pdf.close()
+    pdf_buffer.seek(0)
+
+    st.download_button(
+        label="📥 Download Summary Report (PDF)",
+        data=pdf_buffer,
+        file_name="summary_report.pdf",
+        mime="application/pdf"
+    )
+
+    # 5️⃣ Excel export
     st.subheader("📤 Download Combined Data")
     excel_buffer = BytesIO()
     combined_df.to_excel(excel_buffer, index=False)
